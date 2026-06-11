@@ -1,6 +1,5 @@
-const axios = require("axios");
 require("dotenv").config();
-
+const axios = require("axios");
 const { App } = require("@slack/bolt");
 
 const app = new App({
@@ -10,50 +9,43 @@ const app = new App({
 });
 
 app.command("/dsb-ping", async ({ command, ack, respond }) => {
-  const start = Date.now();
   await ack();
-  const latency = Date.now() - start;
-  await respond({ text: `Pong!\nLatency: ${latency}ms` });
+  await respond({ text: "Pong!" });
 });
-
-(async () => {
-  await app.start();
-  console.log("bot is running!");
-})();
 
 app.command("/dsb-help", async ({ ack, respond }) => {
   await ack();
   await respond({
-    text:
-`Available Commands:
-/dsb-ping - Check bot latency
-/dsb-catfact - Get a cat fact`
+    text: `Available Commands:
+• /dsb-ping
+• /dsb-catfact
+• /dsb-joke`
   });
 });
 
 app.command("/dsb-catfact", async ({ ack, respond }) => {
   await ack();
-
   try {
-    const response = await axios.get("https://catfact.ninja/fact");
-    await respond({ text: `Cat Fact:\n${response.data.fact}` });
-  } catch (err) {
+    const { data } = await axios.get("https://catfact.ninja/fact");
+    await respond({ text: `Cat Fact:\n${data.fact}` });
+  } catch {
     await respond({ text: "Failed to fetch a cat fact." });
   }
 });
 
 app.command("/dsb-joke", async ({ ack, respond }) => {
   await ack();
-
   try {
-    const response = await axios.get("https://official-joke-api.appspot.com/random_joke");
-    await respond({
-      text:
-`${response.data.setup}
-
-${response.data.punchline}`
-    });
-  } catch (err) {
+    const { data } = await axios.get("https://official-joke-api.appspot.com/random_joke");
+    await respond({ text: `${data.setup}\n\n${data.punchline}` });
+  } catch {
     await respond({ text: "Failed to fetch a joke." });
   }
 });
+
+app.error((err) => console.error(err));
+
+(async () => {
+  await app.start(process.env.PORT || 3000);
+  console.log("Bot is running!");
+})();
